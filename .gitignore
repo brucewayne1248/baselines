@@ -35,4 +35,6 @@ src
 
 MUJOCO_LOG.TXT
 
+# saved model files
+baselines/ppo1/experiments
 
