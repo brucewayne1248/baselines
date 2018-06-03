@@ -36,5 +36,7 @@ src
 MUJOCO_LOG.TXT
 
 # saved model files
-baselines/ppo1/experiments
+baselines/ppo1/experiments/*
+!baselines/ppo1/experiments/train_gym_env.py
+!baselines/ppo1/experiments/sim_gym_env.py
 
