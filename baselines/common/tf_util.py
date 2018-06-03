@@ -77,9 +77,11 @@ ALREADY_INITIALIZED = set()
 def initialize():
     """Initialize all the uninitialized variables in the global scope."""
     new_variables = set(tf.global_variables()) - ALREADY_INITIALIZED
-    tf.get_default_session().run(tf.variables_initializer(new_variables))
+#    tf.get_default_session().run(tf.variables_initializer(new_variables))
+    sess = tf.get_default_session()
+    sess.run(tf.variables_initializer(new_variables))
     ALREADY_INITIALIZED.update(new_variables)
-
+    return sess
 # ================================================================
 # Model components
 # ================================================================
@@ -264,7 +266,7 @@ def flattenallbut0(x):
 
 
 # ================================================================
-# Diagnostics 
+# Diagnostics
 # ================================================================
 
 def display_var_info(vars):
@@ -284,7 +286,7 @@ def display_var_info(vars):
 def get_available_gpus():
     # recipe from here:
     # https://stackoverflow.com/questions/38559755/how-to-get-current-available-gpus-in-tensorflow?utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa
- 
+
     from tensorflow.python.client import device_lib
     local_device_protos = device_lib.list_local_devices()
     return [x.name for x in local_device_protos if x.device_type == 'GPU']
@@ -300,6 +302,7 @@ def load_state(fname):
 def save_state(fname):
     os.makedirs(os.path.dirname(fname), exist_ok=True)
     saver = tf.train.Saver()
-    saver.save(tf.get_default_session(), fname)
+    savepath = saver.save(tf.get_default_session(), fname)
+    return savepath
 
 

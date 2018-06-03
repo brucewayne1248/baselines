@@ -8,8 +8,6 @@ from baselines.common.mpi_moments import mpi_moments
 from mpi4py import MPI
 from collections import deque
 
-#from baselines.ppo1.experiments.train_gym_env import save_progress
-
 def traj_segment_generator(pi, env, horizon, stochastic):
     t = 0
     ac = env.action_space.sample() # not used, just so we have the datatype
@@ -85,6 +83,8 @@ def learn(env, policy_fn, *,
         optim_epochs, optim_stepsize, optim_batchsize,# optimization hypers
         gamma, lam, # advantage estimation
         max_timesteps=0, max_episodes=0, max_iters=0, max_seconds=0,  # time constraint
+        filepath=None, # file path to save model weights
+        save_step=None, # every how many iterations the model should be saved
         callback=None, # you can do anything in the callback, since it takes locals(), globals()
         adam_epsilon=1e-5,
         schedule='constant' # annealing for stepsize parameters (epsilon and adam)
@@ -127,8 +127,9 @@ def learn(env, policy_fn, *,
         for (oldv, newv) in zipsame(oldpi.get_variables(), pi.get_variables())])
     compute_losses = U.function([ob, ac, atarg, ret, lrmult], losses)
 
-    U.initialize()
+    sess = U.initialize() # initializing tf session and new variables
     adam.sync()
+    saver = tf.train.Saver() # to save progress
 
     # Prepare for rollouts
     # ----------------------------------------
@@ -213,6 +214,12 @@ def learn(env, policy_fn, *,
         logger.record_tabular("TimeElapsed", time.time() - tstart)
         if MPI.COMM_WORLD.Get_rank()==0:
             logger.dump_tabular()
+
+        if save_step is not None and iters_so_far and iters_so_far % save_step == 0:
+            savepath = U.save_state(filepath+"itr_"+str(iters_so_far))
+#            savepath = saver.save(sess, filepath+"itr_"+str(iters_so_far)) # alternatively use sess from U.initialize()
+            print("Saved model after {} iterations under:".format(iters_so_far) )
+            print(savepath)
 
 def flatten_lists(listoflists):
     return [el for list_ in listoflists for el in list_]
